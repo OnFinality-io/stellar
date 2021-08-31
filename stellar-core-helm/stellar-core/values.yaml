@@ -1,0 +1,223 @@
+domain: sy.onfinality.me
+rootDomain: onfinality.me
+cluster: sy
+
+# node id from database
+nodeId: "" #100
+workspaceId: "" #xxx
+
+# will add labels in all resources created by this template
+network:
+  protocol: stellar
+  chainspec: #kusama
+
+  key: "stellar" #kusama
+  name: "stellar" #kusama CC3
+  fetchChainspec: false
+  chainspecLoc:
+    cloud: ""
+    bucket: ""
+    region: ""
+
+## NOTE:
+## You have to provide a node seed
+##   * either by specifying nodeSeed directly
+##   * or by specifying existingNodeSeedSecret that points to an existing secret
+## You can generate a node seed by running the following command:
+##   docker run --rm -it --entrypoint '' satoshipay/stellar-core stellar-core --genseed
+
+## WARNING: make sure to replace this in your configuration or use existingNodeSeedSecret
+nodeSeed: REDACTED
+
+generateStellarToml: true
+
+existingNodeSeedSecret:
+  name: stellar-core
+  key: nodeSeed
+
+nodeIsValidator: true
+NODE_HOME_DOMAIN: stellar.xcelerator.berkeley.edu
+networkPassphrase: Public Global Stellar Network ; September 2015
+
+catchupComplete: true
+catchupRecent: 1024
+
+
+# targetPeerConnections: 8
+# maxAdditionalPeerConnections: 50
+# maxPendingConnections: 500
+maxConcurrentSubprocesses: 256
+
+knownPeers: []
+
+preferredPeers: []
+
+nodeNames: []
+
+unsafeQuorum: false
+
+quorumSet: {}
+  # - threshold_percent: 66
+  #   validators:
+  #     - $$eno
+  #     - $$keybase0
+  #     - $$tempo
+  #     - $$umbrel
+  # - path: satoshipay
+  #   threshold_percent: 51
+  #   validators:
+  #     - $$satoshipay1
+  #     - $$satoshipay2
+  #     - $$satoshipay3
+
+history: {}
+  # sdf1:
+  #   get: "curl -sf http://history.stellar.org/prd/core-live/core_live_001/{0} -o {1}"
+  # sdf2:
+  #   get: "curl -sf http://history.stellar.org/prd/core-live/core_live_002/{0} -o {1}"
+  # sdf3:
+  #   get: "curl -sf http://history.stellar.org/prd/core-live/core_live_003/{0} -o {1}"
+
+initializeDatabase: true
+initializeHistoryArchives: true
+
+initPg:
+  enabled: false
+
+initCatchup:
+  enabled: false
+  ledger: 21000000
+
+environment: {}
+
+postgresql:
+  enabled: true
+  postgresqlDatabase: stellar-core
+  postgresqlUsername: postgres
+  # options from https://github.com/helm/charts/tree/master/stable/postgresql
+  postgresqlPassword: CHANGE_ME
+
+postgresqlConnectTimeout: 5
+
+## NOTE:
+## existingDatabase is only used if postgresql.enabled is false
+existingDatabase:
+  passwordSecret:
+    name: postgresql-core
+    key: CHANGE_ME
+  password: CHANGE_ME
+  ## NOTE:
+  ## $(DATABASE_PASSWORD) is automatically replaced with the value of the passwordSecret
+  # url: postgresql://dbname=stellar-core host=postgresql-core password=$(DATABASE_PASSWORD)
+
+historyGet:
+historyPut:
+
+aws:
+  enabled: true
+  aws_access_key_id: "REDACTED"
+  aws_secret_access_key: "REDACTED"
+  aws_default_region: "us-west-2"
+
+
+
+image:
+  repository: onfinality/stellar-core
+  tag: 'v17.3.0-4'
+  # flavor: aws
+  # flavor: gcloud
+  pullPolicy: IfNotPresent
+
+# Inbound: a Stellar Core node needs to allow all IPs to connect to its PEER_PORT over TCP.
+# You can specify a port when you configure Stellar Core, but most people use the default, 
+# which is 11625.
+peerService:
+  type: NodePort
+  port: 31625
+  # externalTrafficPolicy: Local
+
+httpService:
+  type: ClusterIP
+  port: 11626
+
+
+
+# TODO: enable and integrate
+prometheus:
+  enabled: true
+  interval: 10s
+  exporterImage: stellar/stellar-core-prometheus-exporter
+  pullPolicy: Always
+
+# TODO: Satoshipay metrics below - deprecate
+metrics:
+  enabled: false
+  # resources: {}
+  service:
+    type: ClusterIP
+    port: "9473"
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9473"
+    loadBalancerIP:
+  image:
+    repository: stellar/stellar-core-prometheus-exporter
+    # Note: use proper tag when upstream uses proper tags
+    tag: latest
+    pullPolicy: Always
+
+persistence:
+  enabled: true
+
+  ## A manually managed Persistent Volume and Claim
+  ## Requires persistence.enabled: true
+  ## If defined, PVC must be created manually before volume will be bound
+  # existingClaim:
+
+  ## database data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  storageClass: "ssd"
+  accessMode: ReadWriteOnce
+  # size: 100Gi
+
+  subPath: "stellar-core"
+  mountPath: /data
+
+  ## Annotations for the persistent volume claim
+  # annotations:
+
+resources:
+  requests:
+    cpu: 2000m
+    memory: 8Gi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+serviceAccount:
+  create: false
+  name:
+
+
+# kong related settings
+ingress_enabled: false
+kong:
+  enabled: false
+  apiKey: "" #string like 5e8f1383-59e5-4912-a9b2-ceebf4ff5de1, required if kong is enabled
+  secretKongCredType:
+    acl: acl
+    keyAuth: key-auth
+  backends:
+    # backend servicer settings for kong ingress
+    - path: http
+      portName: http
+    - path: peer
+      portName: http

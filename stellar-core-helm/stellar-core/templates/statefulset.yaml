@@ -1,0 +1,160 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "stellar-core.fullname" . }}
+  labels:
+    app: {{ template "stellar-core.name" . }}
+    chart: {{ template "stellar-core.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "stellar-core.name" . }}
+      release: {{ .Release.Name }}
+  serviceName: {{ template "stellar-core.fullname" . }}-peer
+  template:
+    metadata:
+      labels:
+        app: {{ template "stellar-core.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      initContainers:
+      #   {{- if .Values.forceScp }}
+      #   - name: {{ .Chart.Name }}-forcescp
+      #     image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}{{ with .Values.image.flavor }}-{{.}}{{ end }}"
+      #     imagePullPolicy: {{ .Values.image.pullPolicy }}
+      #     args: ["stellar-core", "force-scp", "--conf", "/stellar-core.cfg"]
+      #     env:
+      #       {{ include "stellar-core.env" . | indent 12 }}
+      #     volumeMounts:
+      #       - name: data
+      #         mountPath: {{ .Values.persistence.mountPath }}
+      #         subPath: {{ .Values.persistence.subPath }}
+      #   {{- end }}
+        {{- if .Values.initPg.enabled }}
+        - name: {{ .Chart.Name }}-catchup
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # command: ['./entry.sh']
+          args: ["stellar-core", "new-db"]
+          # stellar-core new-db 
+
+          # command: [ "/bin/bash" ]
+          # tty: true
+          # stdin: true
+          # see https://github.com/stellar/new-docs/blob/master/content/docs/run-core-node/configuring.mdx
+          # args: ["stellar-core", "new-db", "--conf", "/stellar-core.cfg"]        
+          
+          env:
+            {{ include "stellar-core.env" . | indent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.persistence.mountPath }}
+              subPath: {{ .Values.persistence.subPath }}
+        {{- end }}
+        {{- if .Values.initCatchup.enabled }}
+        - name: {{ .Chart.Name }}-s3init
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}    
+          # command: ['./entry.sh']      
+          args: ["stellar-core", "new-hist", 'backup', "--conf", "/stellar-core.cfg"]
+          # command: [ "/bin/bash" ]
+          # tty: true
+          # stdin: true
+
+          env:
+            {{ include "stellar-core.env" . | indent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.persistence.mountPath }}
+              # subPath: {{ .Values.persistence.subPath }}
+        {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          # command: ['./entry.sh'] 
+          args: ["stellar-core", "run", "--conf", "/stellar-core.cfg"]
+          # command: ['./entry.sh stellar-core new-db; stellar-archivist'] 
+          # args: ["mirror", "https://history.stellar.org/prd/core-live/core_live_002/", "s3://stellar-archive-history-prod-us.onfinality.io", "--s3region", "us-east-1", "--concurrency", "256"]
+
+          # command: [ "/bin/bash" ]
+          # tty: true
+          # stdin: true
+
+
+          ports:
+            - name: peer
+              containerPort: 11625
+              protocol: TCP
+            - name: http
+              containerPort: 11626
+              protocol: TCP
+          env:
+            {{ include "stellar-core.env" . | indent 12 }}
+          # livenessProbe:
+          #   tcpSocket:
+          #     port: peer
+          # readinessProbe:
+          #   tcpSocket:
+          #     port: peer
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.persistence.mountPath }}
+              # subPath: {{ .Values.persistence.subPath }}
+
+      {{- if .Values.prometheus.enabled }}
+        - name: metrics
+          image: "{{ .Values.prometheus.exporterImage }}"
+          imagePullPolicy: {{ .Values.prometheus.pullPolicy | quote }}
+          env:
+            - name: STELLAR_CORE_ADDRESS
+              value: "http://127.0.0.1:11626"
+            - name: PORT
+              value: "9473"
+          ports:
+            - name: metrics
+              containerPort: 9473
+              protocol: TCP
+          readinessProbe:
+            timeoutSeconds: 5
+            initialDelaySeconds: 20
+            httpGet:
+              path: /
+              port: metrics
+          livenessProbe:
+            timeoutSeconds: 5
+            initialDelaySeconds: 20
+            httpGet:
+              path: /
+              port: metrics
+      {{- end }}
+      volumes:
+      - name: data
+      {{- if .Values.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingClaim | default (include "stellar-core.fullname" .) }}
+      {{- else }}
+        emptyDir: {}
+      {{- end }}
+      - name: scripts
+        configMap:
+          name: {{ .Release.Name }}-configmap
+          defaultMode: 0744
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

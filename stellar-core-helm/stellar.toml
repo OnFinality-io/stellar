@@ -1,0 +1,46 @@
+ACCOUNTS=[
+"REDACTED",
+"REDACTED",
+"REDACTED"
+]
+
+[DOCUMENTATION]
+ORG_NAME="Berkeley Blockchain Xcelerator"
+ORG_DBA="Berkeley Blockchain Xcelerator"
+ORG_NAME="Berkeley Blockchain Xcelerator"
+ORG_DBA="Berkeley Blockchain Xcelerator"
+ORG_URL="https://www.xcelerator.berkeley.edu"
+ORG_LOGO="https://scet.berkeley.edu/wp-content/uploads/x-logo-1.png"
+ORG_DESCRIPTION="Berkeley Accelerator for Blockchain Startups from around the World"
+ORG_PHYSICAL_ADDRESS="California Memorial Stadium, Room 122, 2227 Piedmont Avenue, Berkeley CA 94720,United States"
+ORG_PHYSICAL_ADDRESS_ATTESTATION="https://scet.berkeley.edu/wp-content/uploads/Sutardja-Center-directions.pdf"
+ORG_PHONE_NUMBER="1 (925)297-9132"
+ORG_TWITTER="https://twitter.com/BB_Xcelerator"
+ORG_GITHUB="orgcode"
+ORG_OFFICIAL_EMAIL="xcelerator@berkeley.edu"
+
+
+
+[[VALIDATORS]]
+ALIAS="berkeley_1"
+DISPLAY_NAME="Berkeley_1"
+HOST=":11625"
+PUBLIC_KEY="GBEX6HS7LO5FDTRPOH3JAEMMSELVB4T6LIAJHWI7J5SKC66HAY6JUWKN"
+HISTORY="curl -sf https://stellar-archive-history-prod-us.onfinality.io/{0} -o {1}"
+
+
+[[VALIDATORS]]
+ALIAS="berkeley_2"
+DISPLAY_NAME="Berkeley_2"
+HOST=":11625"
+PUBLIC_KEY="GCNULOSV7B3Y5MMXCC5LMJXNI4XJC5R2HJFYSJ3TDPNMY6MXWVM6Z3M4"
+HISTORY="curl -sf https://stellar-archive-history-prod-ap.onfinality.io/{0} -o {1}"
+
+
+[[VALIDATORS]]
+ALIAS="berkeley_3"
+DISPLAY_NAME="Berkeley_3"
+HOST=":11625"
+PUBLIC_KEY="GA7A3OE7IXHJIZ2MYFDIC5UDWVFV5BJYDECPBBAX6UQVLJ4AJALQHK5G"
+HISTORY="curl -sf https://stellar-archive-history-prod-eu.onfinality.io/{0} -o {1}"
+

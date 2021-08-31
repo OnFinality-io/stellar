@@ -1,0 +1,56 @@
+nodeSeed: REDACTED
+nodeIsValidator: true
+networkPassphrase: Public Global Stellar Network ; September 2015
+NODE_HOME_DOMAIN: stellar.xcelerator.berkeley.edu
+knownPeers:
+  - core-pubnet1.stellar.org
+  - core-pubnet2.stellar.org
+  - core-pubnet3.stellar.org
+  - stellar0.keybase.io
+
+nodeNames:
+  - name: sdf-pubnet1
+    publicKey: GCGB2S2KGYARPVIA37HYZXVRM2YZUEXA6S33ZU5BUDC6THSB62LZSTYH
+  - name: sdf-pubnet2
+    publicKey: GCM6QMP3DLRPTAZW2UZPCPX2LF3SXWXKPMP3GKFZBDSF3QZGV2G5QSTK
+  - name: sdf-pubnet3
+    publicKey: GABMKJM6I25XI4K7U6XWMULOUQIQ27BCTMLS6BYYSOWKTBUXVRJSXHYQ
+  - name: keybase_io
+    publicKey: GCWJKM4EGTGJUVSWUJDPCQEOEP5LHSOFKSA4HALBTOO4T4H3HCHOM6UX
+
+preferredPeerKeys:
+  - $sdf-pubnet1
+  - $sdf-pubnet2
+  - $sdf-pubnet3
+  - $keybase_io
+
+quorumSet:
+  - threshold_percent: 66
+    validators:
+      - $sdf-pubnet1
+      - $sdf-pubnet2
+      - $sdf-pubnet3
+      - $keybase_io
+
+history:
+  sdf-pubnet1:
+    get: "curl -sf https://history.stellar.org/prd/core-pubnet/core_pubnet_001/{0} -o {1}"
+  sdf-pubnet2:
+    get: "curl -sf https://history.stellar.org/prd/core-pubnet/core_pubnet_002/{0} -o {1}"
+  sdf-pubnet3:
+    get: "curl -sf https://history.stellar.org/prd/core-pubnet/core_pubnet_003/{0} -o {1}"
+  keybase_io:
+    get: "curl -sf https://stellarhistory.keybase.io/{0} -o {1}"
+ 
+
+initializeDatabase: true
+
+persistence:
+  size: 1000Gi
+
+postgresql:
+  enabled: true
+  persistence:
+    size: 1000Gi
+
+

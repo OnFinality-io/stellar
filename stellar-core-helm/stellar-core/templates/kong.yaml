@@ -1,0 +1,70 @@
+{{- if .Values.kong }}
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: {{.Release.Name}}-kong-plugin-acl
+  annotations:
+    kubernetes.io/ingress.class: kong
+plugin: acl
+config:
+  whitelist:
+    - {{.Release.Name}}-kong-group
+protocols:
+  - https
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: {{.Release.Name}}-kong-plugin-key-auth
+  annotations:
+    kubernetes.io/ingress.class: kong
+plugin: key-auth
+protocols:
+  - https
+---
+{{- if .Values.kong.apiKey}}
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: {{.Release.Name}}-consumer
+  annotations:
+    kubernetes.io/ingress.class: kong
+username: {{.Release.Name}}-user
+credentials:
+  - {{.Release.Name}}-secret-key-auth
+  - {{.Release.Name}}-secret-acl
+{{ else }}
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: {{.Release.Name}}-consumer
+  annotations:
+    kubernetes.io/ingress.class: kong
+username: {{.Release.Name}}-user
+{{- end }}
+---
+{{- if .Values.kong.apiKey}}
+apiVersion: configuration.konghq.com/v1
+kind: KongCredential
+metadata:
+  name: {{.Release.Name}}-consumer-acl
+  annotations:
+    kubernetes.io/ingress.class: kong
+consumerRef: {{.Release.Name}}-consumer
+type: acl
+config:
+  group: {{.Release.Name}}-kong-group
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongCredential
+metadata:
+  name: {{.Release.Name}}-consumer-key-auth
+  annotations:
+    kubernetes.io/ingress.class: kong
+consumerRef: {{.Release.Name}}-consumer
+type: key-auth
+config:
+  key: {{.Values.kong.apiKey}}
+---
+{{- end }}
+{{- end }}

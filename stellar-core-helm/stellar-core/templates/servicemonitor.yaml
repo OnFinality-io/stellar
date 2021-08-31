@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    prometheus: kube-prometheus
+    app: {{ template "stellar-core.name" . }}
+    chart: {{ template "stellar-core.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  name: {{ template "stellar-core.fullname" . }}-service-monitor
+spec:
+  endpoints:
+    - interval: {{ .Values.prometheus.interval }}
+      path: /metrics
+      port: metrics
+  selector:
+    matchLabels:
+      release: {{ .Release.Name }}

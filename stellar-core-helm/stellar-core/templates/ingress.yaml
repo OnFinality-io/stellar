@@ -1,0 +1,34 @@
+{{- if .Values.ingress_enabled }}
+{{- $root := . -}}
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+
+metadata:
+  name: {{ .Release.Name }}-ingress-http
+  labels:
+  {{- include "mx.common.labels" . | indent 4 }}
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production-dns
+    kubernetes.io/ingress.class: kong
+    route53: "true"
+    configuration.konghq.com: {{ .Release.Name }}-kong-ingress
+    {{- if .Values.kong.enabled }}
+    {{- if .Values.kong.apiKey }}
+    plugins.konghq.com: {{ .Release.Name }}-kong-plugin-key-auth, {{ .Release.Name }}-kong-plugin-acl
+    konghq.com/plugins: {{ .Release.Name }}-kong-plugin-key-auth, {{ .Release.Name }}-kong-plugin-acl
+    {{- end }}
+    {{- end }}
+    kubernetes.io/tls-acme: 'true'
+
+spec:
+  rules:
+    - host: {{ .Release.Name }}.{{ .Values.domain }}
+      http:
+        paths:
+        {{- range $key, $val := .Values.kong.backends }}
+          - path: /{{.path}}
+            backend:
+              serviceName: {{ $root.Release.Name }}-{{ $val.path }}
+              servicePort: {{ .portName }}
+        {{- end }}
+{{- end }}
