@@ -33,11 +33,18 @@ spec:
       #         mountPath: {{ .Values.persistence.mountPath }}
       #         subPath: {{ .Values.persistence.subPath }}
       #   {{- end }}
+
+        - name: stellar-checkdb
+          image: ubuntu/postgres:13-21.04_beta
+          command: ['sh', '-c',
+            'until pg_isready -h stellar-core-postgresql -p 5432;
+            do echo waiting for database; sleep 2; done;']
+
         {{- if .Values.initPg.enabled }}
         - name: {{ .Chart.Name }}-catchup
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          # command: ['./entry.sh']
+          command: ['./entry.sh']
           args: ["stellar-core", "new-db"]
           # stellar-core new-db 
 

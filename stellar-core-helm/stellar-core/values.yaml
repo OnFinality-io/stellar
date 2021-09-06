@@ -82,7 +82,7 @@ initializeDatabase: true
 initializeHistoryArchives: true
 
 initPg:
-  enabled: false
+  enabled: true
 
 initCatchup:
   enabled: false
@@ -129,11 +129,11 @@ image:
   pullPolicy: IfNotPresent
 
 # Inbound: a Stellar Core node needs to allow all IPs to connect to its PEER_PORT over TCP.
-# You can specify a port when you configure Stellar Core, but most people use the default, 
+# You can specify a port when you configure Stellar Core, but most people use the default,
 # which is 11625.
 peerService:
   type: NodePort
-  port: 31625
+  port: 11625
   # externalTrafficPolicy: Local
 
 httpService:
@@ -181,7 +181,7 @@ persistence:
   ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
   ##   GKE, AWS & OpenStack)
   ##
-  storageClass: "ssd"
+  storageClass: "gp2"
   accessMode: ReadWriteOnce
   # size: 100Gi
 
