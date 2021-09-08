@@ -65,7 +65,7 @@ spec:
         - name: {{ .Chart.Name }}-s3init
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}    
-          # command: ['./entry.sh']      
+          # command: ['./entry.sh']
           args: ["stellar-core", "new-hist", 'backup', "--conf", "/stellar-core.cfg"]
           # command: [ "/bin/bash" ]
           # tty: true
@@ -83,7 +83,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
-          # command: ['./entry.sh'] 
+          command: ['./entry.sh']
           args: ["stellar-core", "run", "--conf", "/stellar-core.cfg"]
           # command: ['./entry.sh stellar-core new-db; stellar-archivist'] 
           # args: ["mirror", "https://history.stellar.org/prd/core-live/core_live_002/", "s3://stellar-archive-history-prod-us.onfinality.io", "--s3region", "us-east-1", "--concurrency", "256"]

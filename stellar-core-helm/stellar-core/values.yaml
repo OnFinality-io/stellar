@@ -82,7 +82,7 @@ initializeDatabase: true
 initializeHistoryArchives: true
 
 initPg:
-  enabled: true
+  enabled: false
 
 initCatchup:
   enabled: false
