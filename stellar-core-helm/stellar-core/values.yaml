@@ -84,6 +84,9 @@ initializeHistoryArchives: true
 initPg:
   enabled: false
 
+initArch:
+  enabled: true
+
 initCatchup:
   enabled: false
   ledger: 21000000
