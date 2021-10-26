@@ -33,11 +33,41 @@ spec:
       #         mountPath: {{ .Values.persistence.mountPath }}
       #         subPath: {{ .Values.persistence.subPath }}
       #   {{- end }}
+
+        - name: stellar-checkdb
+          image: ubuntu/postgres:13-21.04_beta
+          command: ['sh', '-c',
+            'until pg_isready -h stellar-core-postgresql -p 5432;
+            do echo waiting for database; sleep 2; done;']
+
+        {{- if .Values.initArch.enabled }}
+        - name: {{ .Chart.Name }}-arch
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # command: ['stellar-archivist mirror https://stellar-archive-history-prod-eu.onfinality.io/ s3://stellar9090/123 --s3region eu-west-1 --concurrency 256']
+          args: ['stellar-archivist', 'mirror', 'http://s3-eu-west-1.amazonaws.com/history.stellar.org/prd/core-testnet/core_testnet_001', 'file://local-archive', '--s3region', 'us-east-2', '--concurrency', '256']
+          # stellar-core new-db
+
+          # command: [ "/bin/bash" ]
+          # tty: true
+          # stdin: true
+          # see https://github.com/stellar/new-docs/blob/master/content/docs/run-core-node/configuring.mdx
+          # args: ["stellar-core", "new-db", "--conf", "/stellar-core.cfg"]
+
+          env:
+            {{ include "stellar-core.env" . | indent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.persistence.mountPath }}
+              subPath: {{ .Values.persistence.subPath }}
+        {{- end }}
+
+
         {{- if .Values.initPg.enabled }}
         - name: {{ .Chart.Name }}-catchup
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          # command: ['./entry.sh']
+          command: ['./entry.sh']
           args: ["stellar-core", "new-db"]
           # stellar-core new-db 
 
@@ -58,7 +88,7 @@ spec:
         - name: {{ .Chart.Name }}-s3init
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}    
-          # command: ['./entry.sh']      
+          # command: ['./entry.sh']
           args: ["stellar-core", "new-hist", 'backup', "--conf", "/stellar-core.cfg"]
           # command: [ "/bin/bash" ]
           # tty: true
@@ -76,7 +106,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
-          # command: ['./entry.sh'] 
+          command: ['./entry.sh']
           args: ["stellar-core", "run", "--conf", "/stellar-core.cfg"]
           # command: ['./entry.sh stellar-core new-db; stellar-archivist'] 
           # args: ["mirror", "https://history.stellar.org/prd/core-live/core_live_002/", "s3://stellar-archive-history-prod-us.onfinality.io", "--s3region", "us-east-1", "--concurrency", "256"]
